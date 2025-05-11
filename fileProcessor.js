@@ -18,10 +18,11 @@ function applyIndicationMapping(obj, mapping) {
     }
 }
 
-async function processXML(rawXml, fileName) {
+async function processXML(rawXml, fileName, callback) {
     const jsonData = await parseXmlToJson(rawXml);
     await applyIndicationMapping(jsonData, configStore.get().indicationMap);
     processedFiles[fileName] = jsonData;
+    callback(fileName, jsonData)
     console.log(`Processed and saved`);
 }
 

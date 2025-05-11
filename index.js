@@ -11,12 +11,30 @@ let pollingWorkerId = null;
 
 app.use(bodyParser.json());
 
-app.get("/config", (req, res) => {
-    res.json(configStore.get());
+let sseClients = [];
+app.get("/events", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    sseClients.push(res);
+    for (const [key, value] of Object.entries(getProcessedFiles())) {
+        res.write(`${JSON.stringify({[key]: value})}\n`);
+    }
+
+    req.on("close", () => {
+        sseClients = sseClients.filter(client => client !== res);
+    });
 });
 
-app.get("/processed-files", (req, res) => {
-    res.json(getProcessedFiles());
+function sendNewJsonDataToClients(fileName, jsonData) {
+    sseClients.forEach(client => {
+        client.write(`${JSON.stringify({[fileName]: jsonData})}\n`);
+    });
+}
+
+app.get("/config", (req, res) => {
+    res.json(configStore.get());
 });
 
 app.post("/config", async (req, res) => {
@@ -27,7 +45,7 @@ app.post("/config", async (req, res) => {
     configStore.update(req.body);
     res.json({message: "Configuration updated successfully"});
     if (pollingWorkerId) clearInterval(pollingWorkerId);
-    pollingWorkerId = startPoller();
+    pollingWorkerId = startPoller(sendNewJsonDataToClients);
 });
 
 app.get("/health", (req, res) => {

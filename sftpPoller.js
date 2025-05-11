@@ -2,7 +2,7 @@ const SftpClient = require("ssh2-sftp-client");
 const configStore = require("./configStore");
 const {processXML, getProcessedFiles} = require("./fileProcessor");
 
-async function pollSftp() {
+async function pollSftp(callback) {
     const {sftpConfig} = configStore.get();
 
     const sftp = new SftpClient();
@@ -14,7 +14,7 @@ async function pollSftp() {
 
             const remoteFilePath = `${sftpConfig.remotePath}/${file.name}`;
             const fileData = await sftp.get(remoteFilePath);
-            await processXML(fileData.toString(), file.name);
+            await processXML(fileData.toString(), file.name, callback);
         }
         await sftp.end();
     } catch (err) {
@@ -22,8 +22,8 @@ async function pollSftp() {
     }
 }
 
-function startPoller() {
-    return setInterval(pollSftp, configStore.get().pollInterval);
+function startPoller(callback) {
+    return setInterval(()=>pollSftp(callback), configStore.get().pollInterval);
 }
 
 function isFileProcessed(fileName){
