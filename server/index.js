@@ -4,22 +4,33 @@ const bodyParser = require("body-parser");
 const startPoller = require("./sftpPoller");
 const validateConfig = require("./validateConfig");
 const {getProcessedFiles} = require("./fileProcessor");
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 let pollingWorkerId = null;
 
 app.use(bodyParser.json());
+app.use(cors({
+    origin: 'http://localhost:5173', // Your React app origin (change for prod)
+}));
 
 let sseClients = [];
 app.get("/events", (req, res) => {
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+    // res.setHeader("Content-Type", "text/event-stream");
+    // res.setHeader("Cache-Control", "no-cache");
+    // res.setHeader("Connection", "keep-alive");
+
+    res.set({
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*', // <-- allow CORS
+    });
 
     sseClients.push(res);
     for (const [key, value] of Object.entries(getProcessedFiles())) {
-        res.write(`${JSON.stringify({[key]: value})}\n`);
+        res.write(`data: ${JSON.stringify({[key]: value})}\n\n`);
     }
 
     req.on("close", () => {
@@ -29,7 +40,7 @@ app.get("/events", (req, res) => {
 
 function sendNewJsonDataToClients(fileName, jsonData) {
     sseClients.forEach(client => {
-        client.write(`${JSON.stringify({[fileName]: jsonData})}\n`);
+        client.write(`data: ${JSON.stringify({[fileName]: jsonData})}\n\n`);
     });
 }
 

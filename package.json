@@ -2,17 +2,24 @@
   "name": "uniper-assignment",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "ssh2-sftp-client": "^12.0.0",
     "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
