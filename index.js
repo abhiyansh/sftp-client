@@ -37,15 +37,15 @@ app.get("/config", (req, res) => {
     res.json(configStore.get());
 });
 
-app.post("/config", async (req, res) => {
+app.post("/connect", async (req, res) => {
     const errors = await validateConfig(req.body);
     if (errors.length > 0) {
         return res.status(400).json({message: "Invalid configuration", errors});
     }
     configStore.update(req.body);
-    res.json({message: "Configuration updated successfully"});
     if (pollingWorkerId) clearInterval(pollingWorkerId);
     pollingWorkerId = startPoller(sendNewJsonDataToClients);
+    res.json({message: "Successfully connected to the server"});
 });
 
 app.get("/health", (req, res) => {
