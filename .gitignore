@@ -1,6 +1,4 @@
 node_modules
 .idea
-config.json
+sample_config.json
 sftp_root
-processed_files
-processed.json
