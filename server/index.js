@@ -28,7 +28,7 @@ app.get("/events", (req, res) => {
         'Access-Control-Allow-Origin': '*',
     });
 
-    if (!configStore.get()) {
+    if (Object.keys(configStore.get()).length === 0) {
         notifier.raiseEventOnClient(res, 'SFTP_CONFIG_MISSING', {"message": "Connect with SFTP server to start receiving files"})
         return;
     }
