@@ -3,7 +3,7 @@ const configStore = require("./configStore");
 const bodyParser = require("body-parser");
 const startPoller = require("./sftpPoller");
 const validateConfig = require("./validateConfig");
-const {getProcessedFiles} = require("./fileProcessor");
+const {getProcessedFiles, clearProcessedFiles} = require("./fileProcessor");
 const cors = require('cors');
 
 const app = express();
@@ -52,20 +52,31 @@ app.get("/config", (req, res) => {
 
 app.post("/connect", async (req, res) => {
     const {sftpConfig, pollInterval, indicationMap} = req.body;
-    req.body = {
+    const config = {
         sftpConfig: {...sftpConfig, remotePath: sftpConfig.remotePath ? sftpConfig.remotePath : '/', port: sftpConfig.port ? sftpConfig.port : 22},
         pollInterval: pollInterval ? +pollInterval : 1000,
         indicationMap: indicationMap ? indicationMap : {},
     };
 
-    const errors = await validateConfig(req.body);
+    const errors = await validateConfig(config);
     if (errors.length > 0) {
         return res.status(400).json({message: "Invalid configuration", errors});
     }
-    configStore.update(req.body);
+    configStore.update(config);
     if (pollingWorkerId) clearInterval(pollingWorkerId);
+    clearProcessedFiles();
     pollingWorkerId = startPoller(sendNewJsonDataToClients);
     res.json({message: "Successfully connected to the server"});
+});
+
+app.post("/disconnect", async (req, res) => {
+    if (pollingWorkerId) {
+        clearInterval(pollingWorkerId);
+        pollingWorkerId = null;
+        clearProcessedFiles();
+        return res.status(200).json({message: "Successfully disconnected from the SFTP server"});
+    }
+    return res.status(400).json({message: "Not connected to the SFTP server"});
 });
 
 app.get("/health", (req, res) => {

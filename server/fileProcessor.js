@@ -30,4 +30,8 @@ function getProcessedFiles() {
     return processedFiles;
 }
 
-module.exports = {processXML, getProcessedFiles};
+function clearProcessedFiles() {
+    processedFiles = {};
+}
+
+module.exports = {processXML, getProcessedFiles, clearProcessedFiles};

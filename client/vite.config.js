@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/connect': 'http://localhost:3000',
+      '/disconnect': 'http://localhost:3000',
       '/events': 'http://localhost:3000',
       '/config': 'http://localhost:3000',
     },

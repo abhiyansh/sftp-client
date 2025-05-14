@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function FilesPage() {
     const [files, setFiles] = useState({});
@@ -30,9 +30,38 @@ function FilesPage() {
         return () => eventSource.close();
     }, []);
 
+    const handleDisconnect = async () => {
+        try {
+            const response = await fetch('/disconnect', { method: 'POST' });
+            if (response.ok) {
+                navigate('/');
+            } else {
+                console.error('Failed to disconnect');
+            }
+        } catch (error) {
+            console.error('Disconnect error:', error);
+        }
+    };
+
     return (
         <div style={{ padding: '2rem' }}>
-            <h1>Received Files</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h1 style={{ margin: 0 }}>Received Files</h1>
+                <button
+                    onClick={handleDisconnect}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#ff4d4f',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                    }}
+                >
+                    Disconnect
+                </button>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {Object.entries(files).map(([filename, content]) => (
                     <div
