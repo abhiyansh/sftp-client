@@ -97,7 +97,7 @@ function HomePage() {
             } else if (res.ok) {
                 navigate('/files');
             }
-        } catch (err) {
+        } catch {
             setServerError('Network error or invalid JSON in indication mapping.');
         }
     };
@@ -181,7 +181,7 @@ function HomePage() {
                     <textarea
                         name="indicationMap"
                         placeholder='{"A": "Running"}'
-                        style={{ ...inputStyle, height: '100px' }}
+                        style={{ ...inputStyle, height: '100px', resize: 'none' }}
                         value={form.indicationMap}
                         onChange={handleChange}
                     />

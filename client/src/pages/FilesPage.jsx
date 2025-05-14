@@ -28,7 +28,7 @@ function FilesPage() {
         };
 
         return () => eventSource.close();
-    }, []);
+    }, [navigate]);
 
     const handleDisconnect = async () => {
         try {
