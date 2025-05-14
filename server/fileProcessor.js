@@ -1,28 +1,21 @@
 const xml2js = require("xml2js");
 const configStore = require("./configStore");
+const {applyIndicationMapping} = require("./mapper");
 
 let processedFiles = {};
 
-async function parseXmlToJson(xmlData) {
-    const parser = new xml2js.Parser();
-    return parser.parseStringPromise(xmlData);
-}
+const ATTRIBUTES_KEY = 'attributes';
 
-function applyIndicationMapping(obj, mapping) {
-    for (let key in obj) {
-        if (typeof obj[key] === "string" && mapping[obj[key]]) {
-            obj[key] = mapping[obj[key]];
-        } else if (typeof obj[key] === "object") {
-            applyIndicationMapping(obj[key], mapping);
-        }
-    }
+async function parseXmlToJson(xmlData) {
+    const parser = new xml2js.Parser({ attrkey: ATTRIBUTES_KEY });
+    return parser.parseStringPromise(xmlData);
 }
 
 async function processXML(rawXml, fileName, callback) {
     const jsonData = await parseXmlToJson(rawXml);
-    await applyIndicationMapping(jsonData, configStore.get().indicationMap);
-    processedFiles[fileName] = jsonData;
-    callback(fileName, jsonData)
+    const mappedData = applyIndicationMapping(jsonData, configStore.get().indicationMap, ATTRIBUTES_KEY);
+    processedFiles[fileName] = mappedData;
+    callback(fileName, mappedData);
     console.log(`Processed and saved`);
 }
 
@@ -34,4 +27,4 @@ function clearProcessedFiles() {
     processedFiles = {};
 }
 
-module.exports = {processXML, getProcessedFiles, clearProcessedFiles};
+module.exports = {processXML, getProcessedFiles, clearProcessedFiles, ATTRIBUTES_KEY};
