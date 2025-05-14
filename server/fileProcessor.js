@@ -11,12 +11,10 @@ async function parseXmlToJson(xmlData) {
     return parser.parseStringPromise(xmlData);
 }
 
-async function processXML(rawXml, fileName, notifier) {
+async function processXML(rawXml) {
     const jsonData = await parseXmlToJson(rawXml);
-    const mappedData = applyIndicationMapping(jsonData, configStore.get().indicationMap, ATTRIBUTES_KEY);
-    processedFiles[fileName] = mappedData;
-    notifier.notifyClients(fileName, mappedData);
-    console.log(`Processed and saved`);
+    return applyIndicationMapping(jsonData, configStore.get().indicationMap, ATTRIBUTES_KEY);
+
 }
 
 function getProcessedFiles() {

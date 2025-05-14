@@ -6,6 +6,7 @@ const validateConfig = require("./validateConfig");
 const {getProcessedFiles, clearProcessedFiles} = require("./fileProcessor");
 const cors = require('cors');
 const ProcessedFileNotifier = require("./ProcessedFileNotifier");
+const SftpPollerJob = require("./SftpPollerJob");
 
 const app = express();
 const PORT = 3000;
@@ -57,13 +58,21 @@ app.post("/connect", async (req, res) => {
     };
 
     const errors = await validateConfig(config);
+
+    let sftpPollerJob = new SftpPollerJob(config, notifier);
+
+    try {
+        await sftpPollerJob.connect();
+    } catch (err) {
+        errors.push(`Failed to connect to the SFTP server`);
+    }
+
     if (errors.length > 0) {
         return res.status(400).json({message: "Invalid configuration", errors});
     }
     configStore.update(config);
     if (pollingWorkerId) clearInterval(pollingWorkerId);
-    clearProcessedFiles();
-    pollingWorkerId = startPoller(notifier);
+    pollingWorkerId = startPoller(sftpPollerJob);
     res.json({message: "Successfully connected to the server"});
 });
 

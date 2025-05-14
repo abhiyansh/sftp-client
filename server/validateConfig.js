@@ -28,18 +28,6 @@ async function validateConfig(config) {
         errors.push("SftpConfig is missing or invalid.");
     }
 
-    if(errors.length > 0) return errors;
-
-    const sftp = new SftpClient();
-    try {
-        await sftp.connect(config.sftpConfig);
-    } catch (err) {
-        errors.push(`Failed to connect to the SFTP server`);
-        console.error(`Failed to connect to SFTP: ${err.message}`)
-    } finally {
-        await sftp.end();
-    }
-
     return errors;
 }
 
