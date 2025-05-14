@@ -1,5 +1,3 @@
-const SftpClient = require("ssh2-sftp-client");
-
 async function validateConfig(config) {
     const errors = [];
 

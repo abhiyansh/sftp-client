@@ -1,7 +1,7 @@
 const SftpClient = require('ssh2-sftp-client');
 const {processXML} = require("./fileProcessor");
 
-class SftpPollerJob {
+class SftpPollingJob {
     constructor(config, notifier, processedFileStore) {
         this.sftp = new SftpClient();
         this.config = config;
@@ -13,7 +13,6 @@ class SftpPollerJob {
     async connect() {
         try {
             await this.sftp.connect(this.config.sftpConfig);
-            this.processedFileStore.clearProcessedFiles();
             console.log('Connected to SFTP server');
         } catch (err) {
             console.error('Failed to connect to SFTP server:', err.message);
@@ -40,7 +39,8 @@ class SftpPollerJob {
 
     async disconnect() {
         await this.sftp.end();
+        this.processedFileStore.clearProcessedFiles();
     }
 }
 
-module.exports = SftpPollerJob;
+module.exports = SftpPollingJob;

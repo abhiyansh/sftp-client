@@ -1,16 +1,15 @@
 const express = require("express");
 const configStore = require("./configStore");
 const bodyParser = require("body-parser");
-const startPoller = require("./sftpPoller");
 const validateConfig = require("./validateConfig");
 const cors = require('cors');
 const ProcessedFileNotifier = require("./ProcessedFileNotifier");
-const SftpPollerJob = require("./SftpPollerJob");
+const SftpPollingJob = require("./SftpPollingJob");
 const ProcessedFileStore = require("./ProcessedFileStore");
+const PollingJobOrchestrator = require("./PollingJobOrchestrator");
 
 const app = express();
 const PORT = 3000;
-let pollingWorkerId = null;
 
 app.use(bodyParser.json());
 app.use(cors({
@@ -19,6 +18,8 @@ app.use(cors({
 
 const processedFileStore = new ProcessedFileStore();
 const notifier = new ProcessedFileNotifier(processedFileStore);
+const jobOrchestrator = new PollingJobOrchestrator();
+
 app.get("/events", (req, res) => {
     res.set({
         'Content-Type': 'text/event-stream',
@@ -57,35 +58,29 @@ app.post("/connect", async (req, res) => {
 
     const errors = await validateConfig(config);
 
-    let sftpPollerJob = new SftpPollerJob(config, notifier, processedFileStore);
+    if (errors.length > 0) {
+        return res.status(400).json({message: "Invalid configuration", errors});
+    }
+
+    const sftpPollerJob = new SftpPollingJob(config, notifier, processedFileStore);
 
     try {
         await sftpPollerJob.connect();
     } catch (err) {
-        errors.push(`Failed to connect to the SFTP server`);
+        return res.status(400).json({message: "Failed to connect to the SFTP server"});
     }
 
-    if (errors.length > 0) {
-        return res.status(400).json({message: "Invalid configuration", errors});
-    }
     configStore.update(config);
-    if (pollingWorkerId) clearInterval(pollingWorkerId);
-    pollingWorkerId = startPoller(sftpPollerJob);
+    jobOrchestrator.startJob(sftpPollerJob, config.pollInterval);
     res.json({message: "Successfully connected to the server"});
 });
 
 app.post("/disconnect", async (req, res) => {
-    if (pollingWorkerId) {
-        clearInterval(pollingWorkerId);
-        pollingWorkerId = null;
-        processedFileStore.clearProcessedFiles();
+    if (jobOrchestrator.isJobRunning()) {
+        jobOrchestrator.stopJob();
         return res.status(200).json({message: "Successfully disconnected from the SFTP server"});
     }
     return res.status(400).json({message: "Not connected to the SFTP server"});
-});
-
-app.get("/health", (req, res) => {
-    res.send("Server is up and running!");
 });
 
 app.listen(PORT, () => {
