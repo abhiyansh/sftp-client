@@ -5,6 +5,7 @@ const startPoller = require("./sftpPoller");
 const validateConfig = require("./validateConfig");
 const {getProcessedFiles, clearProcessedFiles} = require("./fileProcessor");
 const cors = require('cors');
+const ProcessedFileNotifier = require("./ProcessedFileNotifier");
 
 const app = express();
 const PORT = 3000;
@@ -12,10 +13,10 @@ let pollingWorkerId = null;
 
 app.use(bodyParser.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // Your React app origin (change for prod)
+    origin: 'http://localhost:5173',
 }));
 
-let sseClients = [];
+const notifier = new ProcessedFileNotifier();
 app.get("/events", (req, res) => {
     res.set({
         'Content-Type': 'text/event-stream',
@@ -25,26 +26,19 @@ app.get("/events", (req, res) => {
     });
 
     if (!configStore.get()) {
-        res.write('event: SFTP_CONFIG_MISSING\n');
-        res.write('data: {"message": "Connect with SFTP server to start receiving files"}\n\n');
+        notifier.raiseEventOnClient(res, 'SFTP_CONFIG_MISSING', {"message": "Connect with SFTP server to start receiving files"})
         return;
     }
 
-    sseClients.push(res);
-    for (const [key, value] of Object.entries(getProcessedFiles())) {
-        res.write(`data: ${JSON.stringify({[key]: value})}\n\n`);
+    notifier.addClient(res);
+    for (const [fileName, data] of Object.entries(getProcessedFiles())) {
+        notifier.notifyClient(res, fileName, data);
     }
 
     req.on("close", () => {
-        sseClients = sseClients.filter(client => client !== res);
+        notifier.removeClient(res);
     });
 });
-
-function sendNewJsonDataToClients(fileName, jsonData) {
-    sseClients.forEach(client => {
-        client.write(`data: ${JSON.stringify({[fileName]: jsonData})}\n\n`);
-    });
-}
 
 app.get("/config", (req, res) => {
     res.json(configStore.get());
@@ -53,7 +47,11 @@ app.get("/config", (req, res) => {
 app.post("/connect", async (req, res) => {
     const {sftpConfig, pollInterval, indicationMap} = req.body;
     const config = {
-        sftpConfig: {...sftpConfig, remotePath: sftpConfig.remotePath ? sftpConfig.remotePath : '/', port: sftpConfig.port ? sftpConfig.port : 22},
+        sftpConfig: {
+            ...sftpConfig,
+            remotePath: sftpConfig.remotePath ? sftpConfig.remotePath : '/',
+            port: sftpConfig.port ? sftpConfig.port : 22
+        },
         pollInterval: pollInterval ? +pollInterval : 1000,
         indicationMap: indicationMap ? indicationMap : {},
     };
@@ -65,7 +63,7 @@ app.post("/connect", async (req, res) => {
     configStore.update(config);
     if (pollingWorkerId) clearInterval(pollingWorkerId);
     clearProcessedFiles();
-    pollingWorkerId = startPoller(sendNewJsonDataToClients);
+    pollingWorkerId = startPoller(notifier);
     res.json({message: "Successfully connected to the server"});
 });
 
