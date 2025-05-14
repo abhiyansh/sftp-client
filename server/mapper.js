@@ -37,4 +37,4 @@ class Mapper {
     }
 }
 
-module.exports = Mapper;
+export default Mapper;

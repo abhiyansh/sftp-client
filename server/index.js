@@ -1,12 +1,13 @@
-const express = require("express");
-const configStore = require("./config-store");
-const bodyParser = require("body-parser");
-const validateConfig = require("./validate-config");
-const cors = require('cors');
-const ProcessedFileNotifier = require("./processed-file-notifier");
-const SftpPollingJob = require("./sftp-polling-job");
-const ProcessedFileStore = require("./processed-file-store");
-const PollingJobOrchestrator = require("./polling-job-orchestrator");
+import express from "express";
+import configStore from "./config-store.js";
+import bodyParser from "body-parser";
+import validateConfig from "./validate-config.js";
+import cors from 'cors';
+import ProcessedFileNotifier from "./processed-file-notifier.js";
+import SftpPollingJob from "./sftp-polling-job.js";
+import ProcessedFileStore from "./processed-file-store.js";
+import PollingJobOrchestrator from "./polling-job-orchestrator.js";
+import { SFTP_CONFIG_MISSING } from "../shared/constants.js";
 
 const app = express();
 const PORT = 3000;
@@ -28,8 +29,8 @@ app.get("/events", (req, res) => {
         'Access-Control-Allow-Origin': '*',
     });
 
-    if (Object.keys(configStore.get()).length === 0) {
-        notifier.raiseEventOnClient(res, 'SFTP_CONFIG_MISSING', {"message": "Connect with SFTP server to start receiving files"})
+    if (!jobOrchestrator.isJobRunning()) {
+        notifier.raiseEventOnClient(res, SFTP_CONFIG_MISSING, {"message": "Connect with SFTP server to start receiving files"})
         return;
     }
 

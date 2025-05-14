@@ -1,5 +1,5 @@
-const xml2js = require("xml2js");
-const Mapper = require("./mapper");
+import xml2js from "xml2js";
+import Mapper from "./mapper.js";
 
 class XmlToJsonProcessor {
     ATTRIBUTES_KEY = 'attributes';
@@ -15,4 +15,4 @@ class XmlToJsonProcessor {
     }
 }
 
-module.exports = XmlToJsonProcessor;
+export default XmlToJsonProcessor;

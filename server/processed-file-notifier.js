@@ -33,4 +33,4 @@ class ProcessedFileNotifier {
     }
 }
 
-module.exports = ProcessedFileNotifier;
+export default ProcessedFileNotifier;

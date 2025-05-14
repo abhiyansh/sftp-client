@@ -29,4 +29,4 @@ async function validateConfig(config) {
     return errors;
 }
 
-module.exports = validateConfig;
+export default validateConfig;

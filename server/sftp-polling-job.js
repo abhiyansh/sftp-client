@@ -1,5 +1,5 @@
-const SftpClient = require('ssh2-sftp-client');
-const XmlToJsonProcessor = require("./xml-to-json-processor");
+import SftpClient from 'ssh2-sftp-client';
+import XmlToJsonProcessor from "./xml-to-json-processor.js";
 
 class SftpPollingJob {
     constructor(config, notifier, processedFileStore) {
@@ -43,4 +43,4 @@ class SftpPollingJob {
     }
 }
 
-module.exports = SftpPollingJob;
+export default SftpPollingJob;

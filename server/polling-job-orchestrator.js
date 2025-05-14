@@ -24,4 +24,4 @@ class PollingJobOrchestrator {
     }
 }
 
-module.exports = PollingJobOrchestrator;
+export default PollingJobOrchestrator;

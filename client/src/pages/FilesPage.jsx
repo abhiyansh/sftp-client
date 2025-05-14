@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import {useEffect, useState} from 'react';
+import {useNavigate} from "react-router-dom";
+import {SFTP_CONFIG_MISSING} from "../../../shared/constants.js";
 
 function FilesPage() {
     const [files, setFiles] = useState({});
@@ -11,13 +12,13 @@ function FilesPage() {
         eventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                setFiles((prev) => ({ ...prev, ...data }));
+                setFiles((prev) => ({...prev, ...data}));
             } catch (err) {
                 console.error('Invalid SSE data', err);
             }
         };
 
-        eventSource.addEventListener('SFTP_CONFIG_MISSING', () => {
+        eventSource.addEventListener(SFTP_CONFIG_MISSING, () => {
             eventSource.close();
             navigate('/');
         });
@@ -32,7 +33,7 @@ function FilesPage() {
 
     const handleDisconnect = async () => {
         try {
-            const response = await fetch('/disconnect', { method: 'POST' });
+            const response = await fetch('/disconnect', {method: 'POST'});
             if (response.ok) {
                 navigate('/');
             } else {
@@ -44,9 +45,9 @@ function FilesPage() {
     };
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h1 style={{ margin: 0 }}>Received Files</h1>
+        <div style={{padding: '2rem'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                <h1 style={{margin: 0}}>Received Files</h1>
                 <button
                     onClick={handleDisconnect}
                     style={{
@@ -62,7 +63,7 @@ function FilesPage() {
                     Disconnect
                 </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
                 {Object.entries(files).map(([filename, content]) => (
                     <div
                         key={filename}

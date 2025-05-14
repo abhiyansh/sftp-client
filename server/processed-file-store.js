@@ -20,4 +20,4 @@ class ProcessedFileStore {
     }
 }
 
-module.exports = ProcessedFileStore;
+export default ProcessedFileStore;
