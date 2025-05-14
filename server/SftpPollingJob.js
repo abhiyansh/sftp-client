@@ -1,11 +1,11 @@
 const SftpClient = require('ssh2-sftp-client');
-const {processXML} = require("./fileProcessor");
+const XmlToJsonProcessor = require("./xmlToJsonProcessor");
 
 class SftpPollingJob {
     constructor(config, notifier, processedFileStore) {
         this.sftp = new SftpClient();
         this.config = config;
-        // this.fileProcessor = fileProcessor;
+        this.fileProcessor = new XmlToJsonProcessor(config.indicationMap);
         this.notifier = notifier;
         this.processedFileStore = processedFileStore;
     }
@@ -27,7 +27,7 @@ class SftpPollingJob {
                 if (!file.name.endsWith(".xml") || this.processedFileStore.isFileProcessed(file.name)) continue;
                 const filePath = `${this.config.sftpConfig.remotePath}/${file.name}`;
                 const content = await this.sftp.get(filePath);
-                const mappedData = await processXML(content.toString());
+                const mappedData = await this.fileProcessor.process(content.toString());
                 this.processedFileStore.addProcessedFile(file.name, mappedData);
                 this.notifier.notifyClients(file.name, mappedData);
                 console.log(`Processed and saved`);
