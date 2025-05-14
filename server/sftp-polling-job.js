@@ -1,5 +1,5 @@
 const SftpClient = require('ssh2-sftp-client');
-const XmlToJsonProcessor = require("./xmlToJsonProcessor");
+const XmlToJsonProcessor = require("./xml-to-json-processor");
 
 class SftpPollingJob {
     constructor(config, notifier, processedFileStore) {
