@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import {useNavigate} from "react-router-dom";
 
 function FilesPage() {
     const [files, setFiles] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
         const eventSource = new EventSource('http://localhost:3000/events');
@@ -14,6 +16,11 @@ function FilesPage() {
                 console.error('Invalid SSE data', err);
             }
         };
+
+        eventSource.addEventListener('SFTP_CONFIG_MISSING', () => {
+            eventSource.close();
+            navigate('/');
+        });
 
         eventSource.onerror = (err) => {
             console.error('SSE connection error:', err);

@@ -24,6 +24,12 @@ app.get("/events", (req, res) => {
         'Access-Control-Allow-Origin': '*',
     });
 
+    if (!configStore.get()) {
+        res.write('event: SFTP_CONFIG_MISSING\n');
+        res.write('data: {"message": "Connect with SFTP server to start receiving files"}\n\n');
+        return;
+    }
+
     sseClients.push(res);
     for (const [key, value] of Object.entries(getProcessedFiles())) {
         res.write(`data: ${JSON.stringify({[key]: value})}\n\n`);

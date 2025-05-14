@@ -25,6 +25,7 @@ function HomePage() {
                     },
                 });
                 if (res.ok) {
+                    if (JSON.stringify(res) === '{}') return;
                     const data = await res.json();
                     if (Object.keys(data).length > 0) {
                         setForm({
