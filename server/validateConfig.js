@@ -24,15 +24,18 @@ async function validateConfig(config) {
         }
     }
 
+    if (!config.sftpConfig || !config.sftpConfig.host || !config.sftpConfig.username || !config.sftpConfig.password) {
+        errors.push("SftpConfig is missing or invalid.");
+    }
+
+    if(errors.length > 0) return errors;
+
     const sftp = new SftpClient();
     try {
-        if (!config.sftpConfig || !config.sftpConfig.host) {
-            errors.push("SftpConfig is missing or invalid.");
-        }
-
         await sftp.connect(config.sftpConfig);
     } catch (err) {
-        errors.push(`Failed to connect to SFTP: ${err.message}`);
+        errors.push(`Failed to connect to the SFTP server`);
+        console.error(`Failed to connect to SFTP: ${err.message}`)
     } finally {
         await sftp.end();
     }

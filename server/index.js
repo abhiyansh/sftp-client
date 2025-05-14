@@ -17,15 +17,11 @@ app.use(cors({
 
 let sseClients = [];
 app.get("/events", (req, res) => {
-    // res.setHeader("Content-Type", "text/event-stream");
-    // res.setHeader("Cache-Control", "no-cache");
-    // res.setHeader("Connection", "keep-alive");
-
     res.set({
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*', // <-- allow CORS
+        'Access-Control-Allow-Origin': '*',
     });
 
     sseClients.push(res);
@@ -49,6 +45,13 @@ app.get("/config", (req, res) => {
 });
 
 app.post("/connect", async (req, res) => {
+    const {sftpConfig, pollInterval, indicationMap} = req.body;
+    req.body = {
+        sftpConfig: {...sftpConfig, remotePath: sftpConfig.remotePath ? sftpConfig.remotePath : '/', port: sftpConfig.port ? sftpConfig.port : 22},
+        pollInterval: pollInterval ? +pollInterval : 1000,
+        indicationMap: indicationMap ? indicationMap : {},
+    };
+
     const errors = await validateConfig(req.body);
     if (errors.length > 0) {
         return res.status(400).json({message: "Invalid configuration", errors});
