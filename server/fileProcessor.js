@@ -2,8 +2,6 @@ const xml2js = require("xml2js");
 const configStore = require("./configStore");
 const {applyIndicationMapping} = require("./mapper");
 
-let processedFiles = {};
-
 const ATTRIBUTES_KEY = 'attributes';
 
 async function parseXmlToJson(xmlData) {
@@ -17,12 +15,4 @@ async function processXML(rawXml) {
 
 }
 
-function getProcessedFiles() {
-    return processedFiles;
-}
-
-function clearProcessedFiles() {
-    processedFiles = {};
-}
-
-module.exports = {processXML, getProcessedFiles, clearProcessedFiles, ATTRIBUTES_KEY};
+module.exports = {processXML, ATTRIBUTES_KEY};

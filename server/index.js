@@ -3,10 +3,10 @@ const configStore = require("./configStore");
 const bodyParser = require("body-parser");
 const startPoller = require("./sftpPoller");
 const validateConfig = require("./validateConfig");
-const {getProcessedFiles, clearProcessedFiles} = require("./fileProcessor");
 const cors = require('cors');
 const ProcessedFileNotifier = require("./ProcessedFileNotifier");
 const SftpPollerJob = require("./SftpPollerJob");
+const ProcessedFileStore = require("./ProcessedFileStore");
 
 const app = express();
 const PORT = 3000;
@@ -17,7 +17,8 @@ app.use(cors({
     origin: 'http://localhost:5173',
 }));
 
-const notifier = new ProcessedFileNotifier();
+const processedFileStore = new ProcessedFileStore();
+const notifier = new ProcessedFileNotifier(processedFileStore);
 app.get("/events", (req, res) => {
     res.set({
         'Content-Type': 'text/event-stream',
@@ -32,10 +33,7 @@ app.get("/events", (req, res) => {
     }
 
     notifier.addClient(res);
-    for (const [fileName, data] of Object.entries(getProcessedFiles())) {
-        notifier.notifyClient(res, fileName, data);
-    }
-
+    notifier.notifyNewClientOfProcessedFiles(res);
     req.on("close", () => {
         notifier.removeClient(res);
     });
@@ -59,7 +57,7 @@ app.post("/connect", async (req, res) => {
 
     const errors = await validateConfig(config);
 
-    let sftpPollerJob = new SftpPollerJob(config, notifier);
+    let sftpPollerJob = new SftpPollerJob(config, notifier, processedFileStore);
 
     try {
         await sftpPollerJob.connect();
@@ -80,7 +78,7 @@ app.post("/disconnect", async (req, res) => {
     if (pollingWorkerId) {
         clearInterval(pollingWorkerId);
         pollingWorkerId = null;
-        clearProcessedFiles();
+        processedFileStore.clearProcessedFiles();
         return res.status(200).json({message: "Successfully disconnected from the SFTP server"});
     }
     return res.status(400).json({message: "Not connected to the SFTP server"});

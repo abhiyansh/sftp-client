@@ -1,6 +1,7 @@
 class ProcessedFileNotifier {
-    constructor() {
+    constructor(processedFileStore) {
         this.clients = [];
+        this.processedFileStore = processedFileStore;
     }
 
     addClient(client) {
@@ -18,11 +19,11 @@ class ProcessedFileNotifier {
         });
     }
 
-    notifyClient(client, fileName, jsonData) {
-        const payload = JSON.stringify({ [fileName]: jsonData });
-        this.clients.forEach(client => {
+    notifyNewClientOfProcessedFiles(client) {
+        for (const [fileName, jsonData] of Object.entries(this.processedFileStore.getProcessedFiles())) {
+            const payload = JSON.stringify({ [fileName]: jsonData });
             client.write(`data: ${payload}\n\n`);
-        });
+        }
     }
 
     raiseEventOnClient(client, eventName, data) {
