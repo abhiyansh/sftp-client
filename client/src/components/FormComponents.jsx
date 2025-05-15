@@ -1,36 +1,12 @@
 import React, { memo } from 'react';
-
-const fieldStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  marginBottom: '1rem',
-};
-
-const inputStyle = {
-  padding: '0.5rem',
-  fontSize: '1rem',
-};
-
-const errorStyle = {
-  color: 'red',
-  marginTop: '0.25rem',
-  fontSize: '0.875rem',
-};
-
-const labelStyle = {
-  marginBottom: '0.25rem',
-  fontWeight: 'bold',
-};
-
-const requiredStyle = {
-  color: 'red'
-};
-
-const textareaStyle = {
-  ...inputStyle, 
-  height: '100px', 
-  resize: 'none'
-};
+import {
+  fieldStyle,
+  inputStyle,
+  errorStyle,
+  labelStyle,
+  requiredStyle,
+  textareaStyle
+} from '../styles/commonStyles';
 
 export const InputField = memo(({
   label, 

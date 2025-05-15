@@ -1,22 +1,11 @@
 import React, { memo } from 'react';
 import { useSftpConfig } from '../hooks/useSftpConfig';
 import { InputField, TextareaField } from '../components/FormComponents';
-
-const containerStyle = {
-  maxWidth: '400px', 
-  margin: '2rem auto', 
-  fontFamily: 'sans-serif'
-};
-
-const buttonStyle = {
-  padding: '0.5rem 1rem', 
-  fontSize: '1rem'
-};
-
-const serverErrorStyle = {
-  color: 'red', 
-  marginTop: '1rem'
-};
+import { 
+  containerStyle, 
+  buttonStyle, 
+  serverErrorStyle 
+} from '../styles/commonStyles';
 
 const HomePage = () => {
   const {

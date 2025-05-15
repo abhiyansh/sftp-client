@@ -1,66 +1,51 @@
-import React from 'react';
-import {useFileMonitor} from '../hooks/useFileMonitor';
+import React, { memo, useMemo } from 'react';
+import { useFileMonitor } from '../hooks/useFileMonitor';
+import {
+  filesContainerStyle,
+  filesHeaderStyle,
+  titleStyle,
+  disconnectButtonStyle,
+  filesListStyle,
+  fileItemStyle,
+  fileNameStyle,
+  fileContentStyle
+} from '../styles/commonStyles';
 
-function FilesPage() {
-    const {files, disconnectFromSftpServer} = useFileMonitor();
+const FileItem = memo(({ filename, content }) => {
+  const formattedContent = useMemo(() => (
+    JSON.stringify(content, null, 2)
+  ), [content]);
 
-    return (
-        <div style={{padding: '2rem'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
-                <h1 style={{margin: 0}}>Received Files</h1>
-                <button
-                    onClick={disconnectFromSftpServer}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#ff4d4f',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                    }}
-                >
-                    Disconnect
-                </button>
-            </div>
-            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                {Object.entries(files).map(([filename, content]) => (
-                    <div
-                        key={filename}
-                        style={{
-                            border: '1px solid #ccc',
-                            borderRadius: '8px',
-                            padding: '1rem',
-                            backgroundColor: '#f9f9f9',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        }}
-                    >
-                        <h2
-                            style={{
-                                fontSize: '1.25rem',
-                                marginBottom: '0.5rem',
-                                color: '#333',
-                            }}
-                        >
-                            {filename}
-                        </h2>
-                        <pre
-                            style={{
-                                backgroundColor: '#eee',
-                                padding: '1rem',
-                                borderRadius: '4px',
-                                overflowX: 'auto',
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
-                            }}
-                        >
-              {JSON.stringify(content, null, 2)}
-            </pre>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
+  return (
+    <div style={fileItemStyle}>
+      <h2 style={fileNameStyle}>{filename}</h2>
+      <pre style={fileContentStyle}>{formattedContent}</pre>
+    </div>
+  );
+});
 
-export default FilesPage;
+const FilesPage = () => {
+  const { files, disconnectFromSftpServer } = useFileMonitor();
+  
+  const fileEntries = useMemo(() => (
+    Object.entries(files)
+  ), [files]);
+
+  return (
+    <div style={filesContainerStyle}>
+      <div style={filesHeaderStyle}>
+        <h1 style={titleStyle}>Received Files</h1>
+        <button onClick={disconnectFromSftpServer} style={disconnectButtonStyle}>
+          Disconnect
+        </button>
+      </div>
+      <div style={filesListStyle}>
+        {fileEntries.map(([filename, content]) => (
+          <FileItem key={filename} filename={filename} content={content} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default memo(FilesPage);
