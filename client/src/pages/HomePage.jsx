@@ -1,18 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {INIT_CONFIG, SftpConfig} from "../../../shared/sftp-config.js";
 
 function HomePage() {
     const navigate = useNavigate();
-    const [form, setForm] = useState({
-        host: '',
-        port: '22',
-        username: '',
-        password: '',
-        remotePath: '/',
-        pollInterval: '1000',
-        indicationMap: '',
-    });
-
+    const [sftpConfig, setSftpConfig] = useState(INIT_CONFIG);
     const [errors, setErrors] = useState({});
     const [serverError, setServerError] = useState('');
 
@@ -25,18 +17,7 @@ function HomePage() {
                     },
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    if (Object.keys(data).length > 0) {
-                        setForm({
-                            host: data.sftpConfig.host,
-                            port: data.sftpConfig.port.toString(),
-                            username: data.sftpConfig.username,
-                            password: data.sftpConfig.password,
-                            remotePath: data.sftpConfig.remotePath,
-                            pollInterval: data.pollInterval.toString(),
-                            indicationMap: JSON.stringify(data.indicationMap),
-                        });
-                    }
+                    setSftpConfig(await res.json());
                 }
             } catch (err) {
                 console.error('Failed to fetch config', err);
@@ -47,27 +28,13 @@ function HomePage() {
     }, []);
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const validate = () => {
-        const newErrors = {};
-        if (!form.host.trim()) newErrors.host = 'Host is required';
-        if (form.port.trim()) {
-            const portNum = Number(form.port);
-            if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-                newErrors.port = 'Port must be a number between 1 and 65535';
-            }
-        }
-        if (!form.username.trim()) newErrors.username = 'Username is required';
-        if (!form.password.trim()) newErrors.password = 'Password is required';
-        return newErrors;
+        setSftpConfig({...sftpConfig, [e.target.name]: e.target.value});
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setServerError('');
-        const validationErrors = validate();
+        const validationErrors = new SftpConfig(sftpConfig).validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -76,18 +43,8 @@ function HomePage() {
         try {
             const res = await fetch('/connect', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sftpConfig: {
-                        host: form.host,
-                        port: +form.port,
-                        username: form.username,
-                        password: form.password,
-                        remotePath: form.remotePath,
-                    },
-                    pollInterval: +form.pollInterval,
-                    indicationMap: form.indicationMap ? JSON.parse(form.indicationMap) : form.indicationMap,
-                }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sftpConfig),
             });
 
             if (res.status === 400) {
@@ -98,7 +55,7 @@ function HomePage() {
                 navigate('/files');
             }
         } catch {
-            setServerError('Network error or invalid JSON in indication mapping.');
+            setServerError('Network error.');
         }
     };
 
@@ -125,12 +82,12 @@ function HomePage() {
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '2rem auto', fontFamily: 'sans-serif' }}>
+        <div style={{maxWidth: '400px', margin: '2rem auto', fontFamily: 'sans-serif'}}>
             <h1>Connect to SFTP</h1>
             <form onSubmit={handleSubmit}>
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Host <span style={{color: 'red'}}>*</span></label>
-                    <input name="host" style={inputStyle} value={form.host} onChange={handleChange} />
+                    <input name="host" style={inputStyle} value={sftpConfig.host} onChange={handleChange}/>
                     {errors.host && <span style={errorStyle}>{errors.host}</span>}
                 </div>
 
@@ -141,10 +98,10 @@ function HomePage() {
                     <input
                         type="number"
                         name="port"
-                        min="1"
-                        max="65535"
+                        min={1}
+                        max={65535}
                         placeholder="Port (default 22)"
-                        value={form.port}
+                        value={sftpConfig.port}
                         style={inputStyle}
                         onChange={handleChange}
                     />
@@ -154,25 +111,28 @@ function HomePage() {
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Username <span style={{color: 'red'}}>*</span></label>
-                    <input name="username" style={inputStyle} value={form.username} onChange={handleChange} />
+                    <input name="username" style={inputStyle} value={sftpConfig.username} onChange={handleChange}/>
                     {errors.username && <span style={errorStyle}>{errors.username}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Password <span style={{color: 'red'}}>*</span></label>
-                    <input name="password" type="password" style={inputStyle} value={form.password} onChange={handleChange} />
+                    <input name="password" type="password" style={inputStyle} value={sftpConfig.password}
+                           onChange={handleChange}/>
                     {errors.password && <span style={errorStyle}>{errors.password}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Remote Path</label>
-                    <input name="remotePath" style={inputStyle} value={form.remotePath} onChange={handleChange} placeholder="Remote Path (default '/')"/>
+                    <input name="remotePath" style={inputStyle} value={sftpConfig.remotePath} onChange={handleChange}
+                           placeholder="Remote Path (default '/')"/>
                     {errors.remotePath && <span style={errorStyle}>{errors.remotePath}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Poll Interval (ms)</label>
-                    <input name="pollInterval" style={inputStyle} value={form.pollInterval} onChange={handleChange} placeholder="Poll Interval (default 1000)"/>
+                    <input name="pollInterval" type="number" min={1} style={inputStyle} value={sftpConfig.pollInterval}
+                           onChange={handleChange} placeholder="Poll Interval (default 1000)"/>
                     {errors.pollInterval && <span style={errorStyle}>{errors.pollInterval}</span>}
                 </div>
 
@@ -181,18 +141,18 @@ function HomePage() {
                     <textarea
                         name="indicationMap"
                         placeholder='{"A": "Running"}'
-                        style={{ ...inputStyle, height: '100px', resize: 'none' }}
-                        value={form.indicationMap}
+                        style={{...inputStyle, height: '100px', resize: 'none'}}
+                        value={sftpConfig.indicationMap}
                         onChange={handleChange}
                     />
                     {errors.indicationMap && <span style={errorStyle}>{errors.indicationMap}</span>}
                 </div>
 
-                <button type="submit" style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
+                <button type="submit" style={{padding: '0.5rem 1rem', fontSize: '1rem'}}>
                     Connect
                 </button>
 
-                {serverError && <p style={{ color: 'red', marginTop: '1rem' }}>{serverError}</p>}
+                {serverError && <p style={{color: 'red', marginTop: '1rem'}}>{serverError}</p>}
             </form>
         </div>
     );

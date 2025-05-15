@@ -1,13 +1,12 @@
 import express from "express";
-import configStore from "./config-store.js";
 import bodyParser from "body-parser";
-import validateConfig from "./validate-config.js";
 import cors from 'cors';
 import ProcessedFileNotifier from "./processed-file-notifier.js";
 import SftpPollingJob from "./sftp-polling-job.js";
 import ProcessedFileStore from "./processed-file-store.js";
 import PollingJobOrchestrator from "./polling-job-orchestrator.js";
-import { SFTP_CONFIG_MISSING } from "../shared/constants.js";
+import {SFTP_CONFIG_MISSING} from "../shared/constants.js";
+import {INIT_CONFIG, SftpConfig} from "../shared/sftp-config.js";
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +19,7 @@ app.use(cors({
 const processedFileStore = new ProcessedFileStore();
 const notifier = new ProcessedFileNotifier(processedFileStore);
 const jobOrchestrator = new PollingJobOrchestrator();
+const sftpConfig = new SftpConfig(INIT_CONFIG);
 
 app.get("/events", (req, res) => {
     res.set({
@@ -42,28 +42,18 @@ app.get("/events", (req, res) => {
 });
 
 app.get("/config", (req, res) => {
-    res.json(configStore.get());
+    res.json(sftpConfig.config);
 });
 
 app.post("/connect", async (req, res) => {
-    const {sftpConfig, pollInterval, indicationMap} = req.body;
-    const config = {
-        sftpConfig: {
-            ...sftpConfig,
-            remotePath: sftpConfig.remotePath ? sftpConfig.remotePath : '/',
-            port: sftpConfig.port ? sftpConfig.port : 22
-        },
-        pollInterval: pollInterval ? +pollInterval : 1000,
-        indicationMap: indicationMap ? indicationMap : {},
-    };
+    sftpConfig.setConfig(req.body);
+    const errors = sftpConfig.validate();
 
-    const errors = await validateConfig(config);
-
-    if (errors.length > 0) {
+    if (Object.keys(errors).length > 0) {
         return res.status(400).json({message: "Invalid configuration", errors});
     }
 
-    const sftpPollerJob = new SftpPollingJob(config, notifier, processedFileStore);
+    const sftpPollerJob = new SftpPollingJob(sftpConfig, notifier, processedFileStore);
 
     try {
         await sftpPollerJob.connect();
@@ -71,8 +61,7 @@ app.post("/connect", async (req, res) => {
         return res.status(400).json({message: "Failed to connect to the SFTP server"});
     }
 
-    configStore.update(config);
-    jobOrchestrator.startJob(sftpPollerJob, config.pollInterval);
+    jobOrchestrator.startJob(sftpPollerJob, sftpConfig.config.pollInterval);
     res.json({message: "Successfully connected to the server"});
 });
 
