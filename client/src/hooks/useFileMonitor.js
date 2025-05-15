@@ -24,7 +24,7 @@ export function useFileMonitor() {
       eventSourceRef.current.close();
     }
 
-    const eventSource = new EventSource('/files');
+    const eventSource = new EventSource('/file-events');
     eventSourceRef.current = eventSource;
     
     eventSource.onmessage = handleFileUpdate;

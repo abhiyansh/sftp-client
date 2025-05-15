@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/connect': SERVER_BASE_URL,
       '/disconnect': SERVER_BASE_URL,
-      '/files': SERVER_BASE_URL,
+      '/file-events': SERVER_BASE_URL,
       '/config': SERVER_BASE_URL,
     },
   },

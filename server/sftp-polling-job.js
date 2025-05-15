@@ -14,6 +14,7 @@ class SftpPollingJob {
         try {
             await this.sftp.connect({
                 host: this.sftpConfig.host,
+                port: this.sftpConfig.port,
                 username: this.sftpConfig.username,
                 password: this.sftpConfig.password
             });

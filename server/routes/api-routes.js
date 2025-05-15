@@ -5,7 +5,7 @@ import {SFTP_POLLING_JOB_NOT_RUNNING} from "../../shared/constants.js";
 export default function createRouter(sftpConfig, notifier, processedFileStore, jobOrchestrator) {
   const router = express.Router();
 
-  router.get("/files", (req, res) => {
+  router.get("/file-events", (req, res) => {
     res.set({
       'Content-Type': 'text/event-stream',
     });
