@@ -1,55 +1,15 @@
-import {useEffect, useState} from 'react';
-import {useNavigate} from "react-router-dom";
-import {SFTP_POLLING_JOB_NOT_RUNNING} from "../../../shared/constants.js";
+import React from 'react';
+import {useFileMonitor} from '../hooks/useFileMonitor';
 
 function FilesPage() {
-    const [files, setFiles] = useState({});
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const eventSource = new EventSource('/events');
-
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                setFiles((prev) => ({...prev, ...data}));
-            } catch (err) {
-                console.error('Invalid SSE data', err);
-            }
-        };
-
-        eventSource.addEventListener(SFTP_POLLING_JOB_NOT_RUNNING, () => {
-            eventSource.close();
-            navigate('/');
-        });
-
-        eventSource.onerror = (err) => {
-            console.error('SSE connection error:', err);
-            eventSource.close();
-        };
-
-        return () => eventSource.close();
-    }, [navigate]);
-
-    const handleDisconnect = async () => {
-        try {
-            const response = await fetch('/disconnect', {method: 'POST'});
-            if (response.ok) {
-                navigate('/');
-            } else {
-                console.error('Failed to disconnect');
-            }
-        } catch (error) {
-            console.error('Disconnect error:', error);
-        }
-    };
+    const {files, disconnectFromSftpServer} = useFileMonitor();
 
     return (
         <div style={{padding: '2rem'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
                 <h1 style={{margin: 0}}>Received Files</h1>
                 <button
-                    onClick={handleDisconnect}
+                    onClick={disconnectFromSftpServer}
                     style={{
                         padding: '0.5rem 1rem',
                         backgroundColor: '#ff4d4f',
