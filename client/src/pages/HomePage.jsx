@@ -1,60 +1,14 @@
-import {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {INIT_CONFIG, SftpConfig} from "../../../shared/sftp-config.js";
+import React from 'react';
+import { useSftpConfig } from '../hooks/useSftpConfig';
 
 function HomePage() {
-    const navigate = useNavigate();
-    const [sftpConfig, setSftpConfig] = useState(INIT_CONFIG);
-    const [formErrors, setFormErrors] = useState({});
-    const [serverError, setServerError] = useState('');
-
-    useEffect(() => {
-        async function fetchConfig() {
-            try {
-                const res = await fetch('/config', {headers: {'Cache-Control': 'no-cache'}});
-                if (res.ok) setSftpConfig(await res.json());
-                return;
-
-            } catch (err) {
-                console.error('Failed to fetch config', err);
-            }
-            console.error('Failed to fetch config');
-        }
-
-        fetchConfig().then(() => console.log("Config fetched"));
-    }, []);
-
-    const handleChange = (e) => {
-        setSftpConfig({...sftpConfig, [e.target.name]: e.target.value});
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setServerError('');
-        const validationErrors = new SftpConfig(sftpConfig).validate();
-        if (Object.keys(validationErrors).length > 0) {
-            setFormErrors(validationErrors);
-            return;
-        }
-
-        try {
-            const res = await fetch('/connect', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(sftpConfig),
-            });
-
-            if (res.status === 400) {
-                setServerError("Failed to connect to the SFTP server. Please check the credentials and retry again.");
-            } else if (res.status === 500) {
-                setServerError('Internal Server Error. Please try again.');
-            } else {
-                navigate('/files');
-            }
-        } catch {
-            setServerError('Network error.');
-        }
-    };
+    const {
+        sftpConfig,
+        formErrors,
+        serverError,
+        handleFormFieldChange,
+        handleFormSubmit
+    } = useSftpConfig();
 
     const fieldStyle = {
         display: 'flex',
@@ -81,10 +35,10 @@ function HomePage() {
     return (
         <div style={{maxWidth: '400px', margin: '2rem auto', fontFamily: 'sans-serif'}}>
             <h1>Connect to SFTP</h1>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleFormSubmit}>
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Host <span style={{color: 'red'}}>*</span></label>
-                    <input name="host" style={inputStyle} value={sftpConfig.host} onChange={handleChange}/>
+                    <input name="host" style={inputStyle} value={sftpConfig.host} onChange={handleFormFieldChange}/>
                     {formErrors.host && <span style={errorStyle}>{formErrors.host}</span>}
                 </div>
 
@@ -100,7 +54,7 @@ function HomePage() {
                         placeholder="Port (default 22)"
                         value={sftpConfig.port}
                         style={inputStyle}
-                        onChange={handleChange}
+                        onChange={handleFormFieldChange}
                     />
                     {formErrors.port && <p style={errorStyle}>{formErrors.port}</p>}
 
@@ -108,20 +62,20 @@ function HomePage() {
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Username <span style={{color: 'red'}}>*</span></label>
-                    <input name="username" style={inputStyle} value={sftpConfig.username} onChange={handleChange}/>
+                    <input name="username" style={inputStyle} value={sftpConfig.username} onChange={handleFormFieldChange}/>
                     {formErrors.username && <span style={errorStyle}>{formErrors.username}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Password <span style={{color: 'red'}}>*</span></label>
                     <input name="password" type="password" style={inputStyle} value={sftpConfig.password}
-                           onChange={handleChange}/>
+                           onChange={handleFormFieldChange}/>
                     {formErrors.password && <span style={errorStyle}>{formErrors.password}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Remote Path</label>
-                    <input name="remotePath" style={inputStyle} value={sftpConfig.remotePath} onChange={handleChange}
+                    <input name="remotePath" style={inputStyle} value={sftpConfig.remotePath} onChange={handleFormFieldChange}
                            placeholder="Remote Path (default '/')"/>
                     {formErrors.remotePath && <span style={errorStyle}>{formErrors.remotePath}</span>}
                 </div>
@@ -129,7 +83,7 @@ function HomePage() {
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Poll Interval (ms)</label>
                     <input name="pollInterval" type="number" min={1} style={inputStyle} value={sftpConfig.pollInterval}
-                           onChange={handleChange} placeholder="Poll Interval (default 1000)"/>
+                           onChange={handleFormFieldChange} placeholder="Poll Interval (default 1000)"/>
                     {formErrors.pollInterval && <span style={errorStyle}>{formErrors.pollInterval}</span>}
                 </div>
 
@@ -140,7 +94,7 @@ function HomePage() {
                         placeholder='{"A": "Running"}'
                         style={{...inputStyle, height: '100px', resize: 'none'}}
                         value={sftpConfig.indicationMap}
-                        onChange={handleChange}
+                        onChange={handleFormFieldChange}
                     />
                     {formErrors.indicationMap && <span style={errorStyle}>{formErrors.indicationMap}</span>}
                 </div>
