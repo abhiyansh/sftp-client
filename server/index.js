@@ -22,12 +22,7 @@ const jobOrchestrator = new PollingJobOrchestrator();
 const sftpConfig = new SftpConfig(INIT_CONFIG);
 
 app.get("/events", (req, res) => {
-    res.set({
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-    });
+    res.set({'Content-Type': 'text/event-stream'});
 
     if (!jobOrchestrator.isJobRunning()) {
         notifier.raiseEventOnClient(res, SFTP_CONFIG_MISSING, {"message": "Connect with SFTP server to start receiving files"})

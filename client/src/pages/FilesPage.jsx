@@ -7,7 +7,7 @@ function FilesPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const eventSource = new EventSource('http://localhost:3000/events');
+        const eventSource = new EventSource('/events');
 
         eventSource.onmessage = (event) => {
             try {
