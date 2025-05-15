@@ -11,6 +11,10 @@ This app fulfills the following requirements:
 - Polls the SFTP folder at intervals based on user-provided configuration.
 - Receives XML payloads from the SFTP server, converts them to JSON, and applies the value mappings as specified in the configuration.
 
+## Architecture Diagram
+
+![SFTP Client Sequence Diagram](./docs/sequence_diagram_sftp_client.png)
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/)
