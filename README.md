@@ -30,8 +30,18 @@ Edit `.env` as needed and source it before running the app.
 
 ### 3. Install Dependencies
 
+Install backend dependencies in the root directory:
+
 ```sh
 npm install
+```
+
+Then install frontend dependencies in the client directory:
+
+```sh
+cd client
+npm install
+cd ..
 ```
 
 ### 4. Run the App
