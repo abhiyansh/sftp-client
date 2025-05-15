@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {INIT_CONFIG, SftpConfig} from "../../../shared/sftp-config.js";
 
 /**
@@ -12,7 +12,7 @@ export function useSftpConfig() {
   const [formErrors, setFormErrors] = useState({});
   const [serverError, setServerError] = useState('');
   
-  const fetchSftpConfigFromServer = async () => {
+  const fetchSftpConfigFromServer = useCallback(async () => {
     try {
       const response = await fetch('/config', { headers: { 'Cache-Control': 'no-cache' } });
       if (response.ok) {
@@ -25,9 +25,9 @@ export function useSftpConfig() {
       console.error('Failed to fetch SFTP configuration:', error);
       return false;
     }
-  };
+  }, []);
 
-  const connectToSftpServer = async (configData) => {
+  const connectToSftpServer = useCallback(async (configData) => {
     try {
       const response = await fetch('/connect', {
         method: 'POST',
@@ -46,11 +46,7 @@ export function useSftpConfig() {
         error: 'network_error' 
       };
     }
-  };
-
-  const validateSftpConfig = (configData) => {
-    return new SftpConfig(configData).validate();
-  };
+  }, []);
 
   useEffect(() => {
     fetchSftpConfigFromServer()
@@ -61,23 +57,23 @@ export function useSftpConfig() {
           console.error("Failed to load SFTP configuration");
         }
       });
-  }, []);
+  }, [fetchSftpConfigFromServer]);
 
-  const handleFormFieldChange = (e) => {
+  const handleFormFieldChange = useCallback((e) => {
     const { name, value } = e.target;
     setSftpConfig(prevConfig => ({
       ...prevConfig, 
       [name]: value
     }));
-  };
+  }, []);
 
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     setServerError('');
     setFormErrors({});
     
-    const validationErrors = validateSftpConfig(sftpConfig);
+    const validationErrors = new SftpConfig(sftpConfig).validate();
     if (Object.keys(validationErrors).length > 0) {
       setFormErrors(validationErrors);
       return;
@@ -99,13 +95,13 @@ export function useSftpConfig() {
     }
     
     navigate('/files');
-  };
+  }, [sftpConfig, connectToSftpServer, navigate]);
 
-  return {
+  return useMemo(() => ({
     sftpConfig,
     formErrors,
     serverError,
     handleFormFieldChange,
     handleFormSubmit
-  };
+  }), [sftpConfig, formErrors, serverError, handleFormFieldChange, handleFormSubmit]);
 }
