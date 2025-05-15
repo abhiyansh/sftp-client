@@ -1,0 +1,12 @@
+{
+  "host": "localhost",
+  "port": 22,
+  "username": "username",
+  "password": "password",
+  "remotePath": "/",
+  "indicationMap": {
+    "A": "Running",
+    "B": "Stopped"
+  },
+  "pollInterval": 1000
+}
