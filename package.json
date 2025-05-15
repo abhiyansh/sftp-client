@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "server/index.js",
+  "main": "server/app.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node server/index.js",
+    "server": "node server/app.js",
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "test": "vitest"

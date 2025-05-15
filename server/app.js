@@ -5,8 +5,8 @@ import ProcessedFileNotifier from "./processed-file-notifier.js";
 import ProcessedFileStore from "./processed-file-store.js";
 import PollingJobOrchestrator from "./polling-job-orchestrator.js";
 import {INIT_CONFIG, SftpConfig} from "../shared/sftp-config.js";
-import { SERVER_PORT, CLIENT_BASE_URL } from "../shared/config.js";
-import createRouter from "./routes/index.js";
+import {SERVER_PORT, CLIENT_BASE_URL, SERVER_BASE_URL} from "../shared/config.js";
+import createRouter from "./routes/api-routes.js";
 
 const app = express();
 
@@ -24,5 +24,5 @@ const router = createRouter(sftpConfig, notifier, processedFileStore, jobOrchest
 app.use(router);
 
 app.listen(SERVER_PORT, () => {
-    console.log(`Server running on http://localhost:${SERVER_PORT}`);
+    console.log(`Server running on ${SERVER_BASE_URL}`);
 });
