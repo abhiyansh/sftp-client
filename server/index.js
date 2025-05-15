@@ -5,7 +5,7 @@ import ProcessedFileNotifier from "./processed-file-notifier.js";
 import SftpPollingJob from "./sftp-polling-job.js";
 import ProcessedFileStore from "./processed-file-store.js";
 import PollingJobOrchestrator from "./polling-job-orchestrator.js";
-import {SFTP_CONFIG_MISSING} from "../shared/constants.js";
+import {SFTP_POLLING_JOB_NOT_RUNNING} from "../shared/constants.js";
 import {INIT_CONFIG, SftpConfig} from "../shared/sftp-config.js";
 
 const app = express();
@@ -25,7 +25,7 @@ app.get("/events", (req, res) => {
     res.set({'Content-Type': 'text/event-stream'});
 
     if (!jobOrchestrator.isJobRunning()) {
-        notifier.raiseEventOnClient(res, SFTP_CONFIG_MISSING, {"message": "Connect with SFTP server to start receiving files"})
+        notifier.raiseEventOnClient(res, SFTP_POLLING_JOB_NOT_RUNNING, {"message": "Connect with SFTP server to start receiving files"})
         return;
     }
 

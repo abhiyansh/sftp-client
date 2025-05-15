@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
-import {SFTP_CONFIG_MISSING} from "../../../shared/constants.js";
+import {SFTP_POLLING_JOB_NOT_RUNNING} from "../../../shared/constants.js";
 
 function FilesPage() {
     const [files, setFiles] = useState({});
@@ -18,7 +18,7 @@ function FilesPage() {
             }
         };
 
-        eventSource.addEventListener(SFTP_CONFIG_MISSING, () => {
+        eventSource.addEventListener(SFTP_POLLING_JOB_NOT_RUNNING, () => {
             eventSource.close();
             navigate('/');
         });

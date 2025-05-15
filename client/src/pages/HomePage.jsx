@@ -5,26 +5,23 @@ import {INIT_CONFIG, SftpConfig} from "../../../shared/sftp-config.js";
 function HomePage() {
     const navigate = useNavigate();
     const [sftpConfig, setSftpConfig] = useState(INIT_CONFIG);
-    const [errors, setErrors] = useState({});
+    const [formErrors, setFormErrors] = useState({});
     const [serverError, setServerError] = useState('');
 
     useEffect(() => {
         async function fetchConfig() {
             try {
-                const res = await fetch('/config', {
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                    },
-                });
-                if (res.ok) {
-                    setSftpConfig(await res.json());
-                }
+                const res = await fetch('/config', {headers: {'Cache-Control': 'no-cache'}});
+                if (res.ok) setSftpConfig(await res.json());
+                return;
+
             } catch (err) {
                 console.error('Failed to fetch config', err);
             }
+            console.error('Failed to fetch config');
         }
 
-        fetchConfig();
+        fetchConfig().then(() => console.log("Config fetched"));
     }, []);
 
     const handleChange = (e) => {
@@ -36,7 +33,7 @@ function HomePage() {
         setServerError('');
         const validationErrors = new SftpConfig(sftpConfig).validate();
         if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+            setFormErrors(validationErrors);
             return;
         }
 
@@ -51,7 +48,7 @@ function HomePage() {
                 setServerError("Failed to connect to the SFTP server. Please check the credentials and retry again.");
             } else if (res.status === 500) {
                 setServerError('Internal Server Error. Please try again.');
-            } else if (res.ok) {
+            } else {
                 navigate('/files');
             }
         } catch {
@@ -88,7 +85,7 @@ function HomePage() {
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Host <span style={{color: 'red'}}>*</span></label>
                     <input name="host" style={inputStyle} value={sftpConfig.host} onChange={handleChange}/>
-                    {errors.host && <span style={errorStyle}>{errors.host}</span>}
+                    {formErrors.host && <span style={errorStyle}>{formErrors.host}</span>}
                 </div>
 
                 <div style={fieldStyle}>
@@ -105,35 +102,35 @@ function HomePage() {
                         style={inputStyle}
                         onChange={handleChange}
                     />
-                    {errors.port && <p style={errorStyle}>{errors.port}</p>}
+                    {formErrors.port && <p style={errorStyle}>{formErrors.port}</p>}
 
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Username <span style={{color: 'red'}}>*</span></label>
                     <input name="username" style={inputStyle} value={sftpConfig.username} onChange={handleChange}/>
-                    {errors.username && <span style={errorStyle}>{errors.username}</span>}
+                    {formErrors.username && <span style={errorStyle}>{formErrors.username}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Password <span style={{color: 'red'}}>*</span></label>
                     <input name="password" type="password" style={inputStyle} value={sftpConfig.password}
                            onChange={handleChange}/>
-                    {errors.password && <span style={errorStyle}>{errors.password}</span>}
+                    {formErrors.password && <span style={errorStyle}>{formErrors.password}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Remote Path</label>
                     <input name="remotePath" style={inputStyle} value={sftpConfig.remotePath} onChange={handleChange}
                            placeholder="Remote Path (default '/')"/>
-                    {errors.remotePath && <span style={errorStyle}>{errors.remotePath}</span>}
+                    {formErrors.remotePath && <span style={errorStyle}>{formErrors.remotePath}</span>}
                 </div>
 
                 <div style={fieldStyle}>
                     <label style={labelStyle}>Poll Interval (ms)</label>
                     <input name="pollInterval" type="number" min={1} style={inputStyle} value={sftpConfig.pollInterval}
                            onChange={handleChange} placeholder="Poll Interval (default 1000)"/>
-                    {errors.pollInterval && <span style={errorStyle}>{errors.pollInterval}</span>}
+                    {formErrors.pollInterval && <span style={errorStyle}>{formErrors.pollInterval}</span>}
                 </div>
 
                 <div style={fieldStyle}>
@@ -145,7 +142,7 @@ function HomePage() {
                         value={sftpConfig.indicationMap}
                         onChange={handleChange}
                     />
-                    {errors.indicationMap && <span style={errorStyle}>{errors.indicationMap}</span>}
+                    {formErrors.indicationMap && <span style={errorStyle}>{formErrors.indicationMap}</span>}
                 </div>
 
                 <button type="submit" style={{padding: '0.5rem 1rem', fontSize: '1rem'}}>
