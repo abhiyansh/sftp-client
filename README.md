@@ -26,7 +26,7 @@ cd sftp-client
 
 ### 2. Configure Environment Variables
 
-Edit `.env` as needed
+Edit `.env` as needed and source it before running the app.
 
 ### 3. Install Dependencies
 
